@@ -79,6 +79,7 @@ def build_dir(name):
 @command('ansible', aliases=['an'], help='run ansible playbooks', priority=0)
 def helga_ansible(client, channel, nick, message, cmd, args):
     commands = getattr(settings, 'ANSIBLE_BUILDS', {}).items()
+    host = socket.gethostname()
     cmd = args.pop(0)
     if cmd not in commands:
         return "I don't have %s configured as an ansible playbook to run" % cmd
@@ -89,11 +90,15 @@ def helga_ansible(client, channel, nick, message, cmd, args):
     # go to the build_directory we need
     os.chdir(build_directory)
     if options.get('directory'):
-        os.chdir(options['directory']
+        os.chdir(options['directory'])
 
     if args:
         args = ['--extra-vars', "%s" % ' '.join(args)]
         cmd = cmd.extend(args)
 
     run(cmd, build_directory=build_directory)
-    return 'running: %s' % ' '.join(cmd)
+    msg = [
+        'running: %s' % ' '.join(cmd),
+        'build running from %s at %s' % (host, build_directory),
+    ]
+    return msg
