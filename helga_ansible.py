@@ -1,14 +1,14 @@
-import requests
-from datetime import datetime
 import os
+import requests
+import socket
+import subprocess
+import sys
+from select import select
+from datetime import datetime
 from helga.plugins import command
 from helga import log, settings
 
 logger = log.getLogger(__name__)
-
-import subprocess
-import sys
-from select import select
 
 
 def run(cmd, **kw):
@@ -16,6 +16,13 @@ def run(cmd, **kw):
     stdout_log = os.path.join(build_directory, 'stdout_log')
     stderr_log = os.path.join(build_directory, 'stderr_log')
     status_file = os.path.join(build_directory, 'status')
+
+    # ensure log files exist:
+    for f in [stdout_log, stderr_log, status_file]:
+        full_path = os.path.join(build_directory, f)
+        if not os.path.exists(full_path):
+            with open(full_path, 'w') as _file:
+                _file.write()
 
     process = subprocess.Popen(
         cmd,
@@ -89,6 +96,9 @@ def helga_ansible(client, channel, nick, message, cmd, args):
 
     # go to the build_directory we need
     os.chdir(build_directory)
+
+    # clone the repo
+    run(['git', 'clone', options['git-url']], build_directory)
     if options.get('directory'):
         os.chdir(options['directory'])
 
